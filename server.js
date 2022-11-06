@@ -1,6 +1,7 @@
 const express = require('express');
 const inquirer = require('inquirer')
 const mysql = require('mysel2');
+const { env } = require('process');
  
 const PORT = process.env || 3001;
 const app = express();
@@ -14,13 +15,13 @@ const db = mysql.createConnection(
       // MySQL username,
       user: 'root',
       // TODO: Add MySQL password here
-      password: '1234567890',
+      password: process.env.DB_PASSWORD,
       database: 'thecompany_db'
     },
     console.log(`Connected to thecompany_db database.`)
   );
 
-  app.use
+//connst to the index.js
 
 
 //functionality
