@@ -1,21 +1,12 @@
-const connect = require('./connection/connect.js');
+const db = require('./connection/connection');
 const inquirer = require('inquirer');
-const mysql = require('mysel2');
 const table = require('console.table');
 
 
+const app = express();
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
-const db = mysql.createConnect(
-    {
-        host: 'localhost',
-        // MySQL username,
-        user: 'root',
-        // TODO: Add MySQL password here
-        password: process.env.DB_PASSWORD,
-        database: 'thecompany_db'
-    },
-    console.log(`Connected to thecompany_db database.`)
-);
 
 db.connect(function (err) {
     if (err) throw err;
@@ -30,7 +21,22 @@ function mainMenu() {
             {
                 type: 'list',
                 message: 'What would you like to do?',
-                choices: ['View all departments', 'View all roles', 'View all employees', 'Add department', 'Add role', 'Add employee', 'Update an employee role', 'quit'],
+                choices: [
+                'View all departments', 
+                'View all roles', 
+                'View all employees', 
+                'Add department', 
+                'Add role', 
+                'Add employee', 
+                'Update an employee role', 
+                'Update employee manager', 
+                'View employees by manager', 
+                'view employees by department',
+                'Delete department',
+                'Delete role',
+                'Delete employee',
+                'quit'
+            ],
                 name: 'whatDoYouWant'
             }
         ]).then((answer) => {
@@ -60,9 +66,9 @@ function mainMenu() {
         })
 };
 
-//async function for each choice. connect each to the database. add follow up questions in these functions
+//async function for each choice. db each to the database. add follow up questions in these functions
 function viewDepartment() {
-    connect.query("SELECT * FROM department", function (err, data) {
+    db.query("SELECT * FROM department", function (err, data) {
         if (err) throw err;
         console.table(data);
         mainMenu();
@@ -70,7 +76,7 @@ function viewDepartment() {
 }
 
 function viewEmployees() {
-    connect.query("SELECT * FROM employee", function (err, data) {
+    db.query("SELECT * FROM employee", function (err, data) {
         if (err) throw err;
         console.table(data);
         mainMenu();
@@ -78,7 +84,7 @@ function viewEmployees() {
 }
 
 function viewRoles() {
-    connect.query("SELECT * FROM employee_role", function (err, data) {
+    db.query("SELECT * FROM employee_role", function (err, data) {
         if (err) throw err;
         console.table(data);
         mainMenu();
@@ -93,7 +99,7 @@ function addDepartment() {
             name: 'depName'
         }
     ]).then(function (res) {
-        connect.query("INSERT INTO department (dep_name) VALUES (?)", res.department, function (err, data) {
+        db.query("INSERT INTO department (dep_name) VALUES (?)", res.department, function (err, data) {
             if (err) throw err;
             console.table(data);
             console.log("Department sucessfully added");
@@ -120,8 +126,8 @@ function addRole() {
             name: 'depRole'
         }
     ]).then(function (res) {
-        //not sure if that is correct for the values and i need to connect the depatment id to the department table
-        connect.query("INSERT INTO employee_role (title) VALUES (title, salary, dep_id)", res.department, function (err, data) {
+        //not sure if that is correct for the values and i need to db the depatment id to the department table
+        db.query("INSERT INTO employee_role (title) VALUES (title, salary, dep_id)", res.employee_role, function (err, data) {
             if (err) throw err;
             console.table(data);
             console.log("Department sucessfully added");
@@ -148,8 +154,8 @@ function addEmployee() {
             name: 'manager'
         }
     ]).then(function (res) {
-        //not sure if that is correct for the values and i need to connect the depatment id to the department table
-        connect.query("INSERT INTO employee VALUES (first_name, last_name, role_id(connect to role(id)), )", res.department, function (err, data) {
+        //not sure if that is correct for the values and i need to db the depatment id to the department table
+        db.query("INSERT INTO employee VALUES (first_name, last_name, role_id(db to role(id)), )", res.employee, function (err, data) {
             if (err) throw err;
             console.table(data);
             console.log("Department sucessfully added");
