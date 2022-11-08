@@ -1,9 +1,11 @@
-const inquirer = require('inquirer')
+const connect = require('./connection/connect.js');
+const inquirer = require('inquirer');
 const mysql = require('mysel2');
+const table = require('console.table');
 
 
 
-const db = mysql.createConnection(
+const db = mysql.createConnect(
     {
         host: 'localhost',
         // MySQL username,
@@ -60,21 +62,24 @@ function mainMenu() {
 
 //async function for each choice. connect each to the database. add follow up questions in these functions
 function viewDepartment() {
-    db.query("SELECT * FROM department", function (err, data) {
+    connect.query("SELECT * FROM department", function (err, data) {
+        if (err) throw err;
         console.table(data);
         mainMenu();
     })
 }
 
 function viewEmployees() {
-    db.query("SELECT * FROM employee", function (err, data) {
+    connect.query("SELECT * FROM employee", function (err, data) {
+        if (err) throw err;
         console.table(data);
         mainMenu();
     })
 }
 
 function viewRoles() {
-    db.query("SELECT * FROM employee_role", function (err, data) {
+    connect.query("SELECT * FROM employee_role", function (err, data) {
+        if (err) throw err;
         console.table(data);
         mainMenu();
     })
@@ -87,44 +92,72 @@ function addDepartment() {
             message: 'What is the name of the department?',
             name: 'depName'
         }
-    ]).then(function(res) {
-        db.query('INSERT INTO department (name) VALUES (?)', [res.department], function(err, data) {
+    ]).then(function (res) {
+        connect.query("INSERT INTO department (dep_name) VALUES (?)", res.department, function (err, data) {
             if (err) throw err;
+            console.table(data);
             console.log("Department sucessfully added");
             mainMenu();
         })
     })
 }
-//     {
-//       type: 'input',
-//       message: 'What is the name of the role',
-//       name: 'role'
-//     },
-//     {
-//       type: 'input',
-//       message: 'What is the salary of the role?',
-//       name: 'money'
-//     },
-//     {
-//       type: 'input',
-//       message: 'What department does the role belong to?',
-//       name: 'depRole'
-//     },
-//     {
-//       type: 'input',
-//       message: "What is the the employee's first name?",
-//       name: 'firstName'
-//     },
-//     {
-//       type: 'input',
-//       message: "What is the employee's last name",
-//       name: 'lastName'
-//     },
-//     {
-//       type: 'input',
-//       message: "Who is the employee's manager?",
-//       name: 'manager'
-//     },
+
+function addRole() {
+    inquirer.prompt([
+        {
+            type: 'input',
+            message: 'What is the name of the role',
+            name: 'role'
+        },
+        {
+            type: 'input',
+            message: 'What is the salary of the role?',
+            name: 'money'
+        },
+        {
+            type: 'input',
+            message: 'What department does the role belong to?',
+            name: 'depRole'
+        }
+    ]).then(function (res) {
+        //not sure if that is correct for the values and i need to connect the depatment id to the department table
+        connect.query("INSERT INTO employee_role (title) VALUES (title, salary, dep_id)", res.department, function (err, data) {
+            if (err) throw err;
+            console.table(data);
+            console.log("Department sucessfully added");
+            mainMenu();
+        })
+    })
+}
+
+function addEmployee() {
+    inquirer.prompt([
+        {
+            type: 'input',
+            message: "What is the the employee's first name?",
+            name: 'firstName'
+        },
+        {
+            type: 'input',
+            message: "What is the employee's last name",
+            name: 'lastName'
+        },
+        {
+            type: 'input',
+            message: "Who is the employee's manager?",
+            name: 'manager'
+        }
+    ]).then(function (res) {
+        //not sure if that is correct for the values and i need to connect the depatment id to the department table
+        connect.query("INSERT INTO employee VALUES (first_name, last_name, role_id(connect to role(id)), )", res.department, function (err, data) {
+            if (err) throw err;
+            console.table(data);
+            console.log("Department sucessfully added");
+            mainMenu();
+        })
+    })
+}
+
 //     {
 //       type: 'input',
 //       message: "Which employye's role do you want to update?",
