@@ -6,7 +6,6 @@ const db = mysql.createConnection(
     {
         host: 'localhost',
         // MySQL username,
-        port: 3001,
         user: 'root',
         // TODO: Add MySQL password here
         password: process.env.DB_PASSWORD,

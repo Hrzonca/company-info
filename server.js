@@ -2,19 +2,13 @@ const db = require('./connection/connection');
 const inquirer = require('inquirer');
 const table = require('console.table');
 
-
-const app = express();
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-
-
 db.connect(function (err) {
     if (err) throw err;
     console.log('Wrong');
     mainMenu();
 })
 
-//questions
+//Main menu questions for routes
 function mainMenu() {
     inquirer
         .prompt([
@@ -22,75 +16,106 @@ function mainMenu() {
                 type: 'list',
                 message: 'What would you like to do?',
                 choices: [
-                'View all departments', 
-                'View all roles', 
-                'View all employees', 
-                'Add department', 
-                'Add role', 
-                'Add employee', 
-                'Update an employee role', 
-                'Update employee manager', 
-                'View employees by manager', 
-                'view employees by department',
-                'Delete department',
-                'Delete role',
-                'Delete employee',
-                'quit'
-            ],
+                    'View all departments',
+                    'View all roles',
+                    'View all employees',
+                    'Add department',
+                    'Add role',
+                    'Add employee',
+                    'Update an employee role',
+                    'Update employee manager',
+                    'View employees by manager',
+                    'view employees by department',
+                    'Delete department',
+                    'Delete role',
+                    'Delete employee',
+                    'quit'
+                ],
                 name: 'whatDoYouWant'
             }
         ]).then((answer) => {
             const choices = answer;
             if (choices === 'View all departments') {
-                //create function that will display a table with depatment names an ids
-                viewDepartment();
+                viewDepartments();
+
             } else if (choices === 'View all roles') {
-                //create function that displays a table of job title, role id, the department that the role belongs to, and the the salary for that role
                 viewRoles();
+
             } else if (choices === 'View all employees') {
-                //create function that will display a table with employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
                 viewEmployees();
+
             } else if (choices === 'Add department') {
-                //create function that will add the department to the database
                 addDepartment();
+
             } else if (choices === 'Add role') {
-                //create function that allows you to enter a name, salary, and department for that role and that it was added to the database
                 addRole();
+
             } else if (choices === 'Add employee') {
-                //create function that prompts to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
                 addEmployee();
+
             } else if (choices === 'Update an employee role') {
-                // create function prompts to select an employee to update and their new role and this information is updated in the database
                 updateEmployee();
+
+            } else if (choices === 'Update employee manager') {
+                updateManager();
+
+            } else if (choices === 'View employees by manager') {
+                employeeManager();
+
+            } else if (choices === 'View employees by department') {
+                departmentEmployees();
+
+            } else if (choices === 'Delete Department') {
+                deleteDepartment();
+
+            } else if (choices === 'Delete role') {
+                deleteRole();
+
+            } else if (choices === 'Delete employee') {
+                deleteEmployee();
+
+            } else if (choices === 'quit') {
+                quit();
             }
         })
 };
 
-//async function for each choice. db each to the database. add follow up questions in these functions
-function viewDepartment() {
-    db.query("SELECT * FROM department", function (err, data) {
+//View all departments
+function viewDepartments() {
+    const sql = `SELECT department.id AS id, department.dep_name AS department FROM department`;
+    db.promise().query(sql, (err, res) => {
         if (err) throw err;
-        console.table(data);
+        console.table(res);
         mainMenu();
     })
 }
 
+//View all employees
 function viewEmployees() {
-    db.query("SELECT * FROM employee", function (err, data) {
+    const sql = `SELECT employee.id, employee.first_name, employee.last_name, employee_role.title, department.dep_name AS 'department', 
+    role.salary FROM employee, employee_role, department 
+    WHERE department.id = role.department.id
+    AND role.id = employee.employee_role.role_id`
+    db.promise().query(sql, (err, res) => {
         if (err) throw err;
-        console.table(data);
+        console.table(res);
         mainMenu();
     })
 }
 
+//View all roles
 function viewRoles() {
-    db.query("SELECT * FROM employee_role", function (err, data) {
+    const sql = `SELECT employee_role.id, employee_role.title, department.dep_name AS department 
+    FROM employee_role
+    INNER JOIN department ON employee_role.department_id = department.id`
+    db.promise().query(sql, (err, res) => {
         if (err) throw err;
-        console.table(data);
+        console.table(res);
         mainMenu();
     })
 }
 
+//Add department to database
 function addDepartment() {
     inquirer.prompt([
         {
@@ -99,15 +124,16 @@ function addDepartment() {
             name: 'depName'
         }
     ]).then(function (res) {
-        db.query("INSERT INTO department (dep_name) VALUES (?)", res.department, function (err, data) {
+        db.query("INSERT INTO department (dep_name) VALUES (?)", res.department, function (err, res) {
             if (err) throw err;
-            console.table(data);
+            console.table(res);
             console.log("Department sucessfully added");
             mainMenu();
         })
     })
 }
 
+//Adding a role 
 function addRole() {
     inquirer.prompt([
         {
@@ -126,16 +152,16 @@ function addRole() {
             name: 'depRole'
         }
     ]).then(function (res) {
-        //not sure if that is correct for the values and i need to db the depatment id to the department table
-        db.query("INSERT INTO employee_role (title) VALUES (title, salary, dep_id)", res.employee_role, function (err, data) {
+        db.query("INSERT INTO employee_role (title) VALUES (title, salary, dep_id)", res.employee_role, function (err, res) {
             if (err) throw err;
-            console.table(data);
+            console.table(res);
             console.log("Department sucessfully added");
             mainMenu();
         })
     })
 }
 
+//Add employee
 function addEmployee() {
     inquirer.prompt([
         {
@@ -154,15 +180,43 @@ function addEmployee() {
             name: 'manager'
         }
     ]).then(function (res) {
-        //not sure if that is correct for the values and i need to db the depatment id to the department table
-        db.query("INSERT INTO employee VALUES (first_name, last_name, role_id(db to role(id)), )", res.employee, function (err, data) {
+        db.query("INSERT INTO employee VALUES (first_name, last_name, role_id(db to role(id)), )", res.employee, function (err, res) {
             if (err) throw err;
-            console.table(data);
+            console.table(res);
             console.log("Department sucessfully added");
             mainMenu();
         })
     })
 }
+
+function updateEmployee() {
+
+}
+
+function employeeManager() {
+
+}
+
+function departmentEmployees() {
+
+}
+
+function deleteDepartment() {
+
+}
+
+function deleteRole() {
+
+}
+
+function deleteEmployee() {
+
+}
+
+function quit() {
+
+}
+
 
 //     {
 //       type: 'input',
