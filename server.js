@@ -1,15 +1,16 @@
-const db = require('./connection/connection');
+const db = require('./config/connection');
 const inquirer = require('inquirer');
-const table = require('console.table');
+const cTable = require('console.table');
+
 
 db.connect(function (err) {
     if (err) throw err;
-    console.log('Wrong');
+    console.log('Welcome to your company tracker');
     mainMenu();
 })
 
 //Main menu questions for routes
-function mainMenu() {
+const mainMenu = () => {
     inquirer
         .prompt([
             {
@@ -39,46 +40,60 @@ function mainMenu() {
             if (choices === 'View all departments') {
                 viewDepartments();
 
-            } else if (choices === 'View all roles') {
+            } 
+            if (choices === 'View all roles') {
                 viewRoles();
 
-            } else if (choices === 'View all employees') {
+            } 
+            if (choices === 'View all employees') {
                 viewEmployees();
 
-            } else if (choices === 'Add department') {
+            } 
+            if (choices === 'Add department') {
                 addDepartment();
 
-            } else if (choices === 'Add role') {
+            } 
+            if (choices === 'Add role') {
                 addRole();
 
-            } else if (choices === 'Add employee') {
+            } 
+            if (choices === 'Add employee') {
                 addEmployee();
 
-            } else if (choices === 'Update an employee role') {
+            } 
+            if (choices === 'Update an employee role') {
                 updateEmployee();
 
-            } else if (choices === 'Update employee manager') {
+            } 
+            if (choices === 'Update employee manager') {
                 updateManager();
 
-            } else if (choices === 'View employees by manager') {
+            } 
+            if (choices === 'View employees by manager') {
                 viewEmployeeManager();
 
-            } else if (choices === 'View employees by department') {
+            } 
+            if (choices === 'View employees by department') {
                 viewDepartmentEmployees();
 
-            } else if (choices === 'Delete Department') {
+            } 
+            if (choices === 'Delete Department') {
                 deleteDepartment();
 
-            } else if (choices === 'Delete role') {
+            } 
+            if (choices === 'Delete role') {
                 deleteRole();
 
-            } else if (choices === 'Delete employee') {
+            } 
+            if (choices === 'Delete employee') {
                 deleteEmployee();
 
-            } else if (choices === 'View department budget') {
+            } 
+            if (choices === 'View department budget') {
                 viewDepartmentBudget();
 
-            } else if (choices === 'quit') {
+            } 
+            if (choices === 'quit') {
                 quit();
             }
         })
@@ -86,31 +101,36 @@ function mainMenu() {
 
 //--------------------------- View ---------------------------------
 //View all departments
-function viewDepartments() {
-    const sql = `SELECT department.id AS id, department.dep_name AS department FROM department`;
-    db.promise().query(sql, (err, res) => {
-        if (err) throw err;
-        console.table(res);
+const viewDepartments = () => {
+    let sql = `SELECT department.id AS id, department.dep_name AS department FROM department`;
+    db.promise().query(sql, (error, response) => {
+        if (error) throw error;
+        console.table(response);
         mainMenu();
     })
-}
+};
 
 //View all employees
-function viewEmployees() {
-    const sql = `SELECT employee.id, employee.first_name, employee.last_name, employee_role.title, department.dep_name AS 'department', 
-    role.salary FROM employee, employee_role, department 
-    WHERE department.id = role.department.id
-    AND role.id = employee.employee_role.role_id`;
+const viewEmployees = () => {
+    let sql = `SELECT employee.id, 
+    employee.first_name, 
+    employee.last_name, 
+    employee_role.title, 
+    department.dep_name AS 'department', 
+    role.salary 
+    FROM employee, employee_role, department 
+    WHERE department.id = employee_role.dep_id
+    AND employee_role.id = employee.role_id`;
     db.promise().query(sql, (err, res) => {
         if (err) throw err;
-        console.table(res);
+        console.table([res]);
         mainMenu();
     })
-}
+};
 
 //View all roles
-function viewRoles() {
-    const sql = `SELECT employee_role.id, employee_role.title, department.dep_name AS department 
+const viewRoles = () => {
+    let sql = `SELECT employee_role.id, employee_role.title, department.dep_name AS department 
     FROM employee_role
     INNER JOIN department ON employee_role.department_id = department.id`;
     db.promise().query(sql, (err, res) => {
@@ -118,11 +138,11 @@ function viewRoles() {
         console.table(res);
         mainMenu();
     })
-}
+};
 
 //--------------Bonus: View by manager and view by department-----------
-function viewEmployeeManager() {
-    const sql = `SELECT employee.first_name, employee.last_name, employee.manager_id AS department 
+const viewEmployeeManager = () => {
+    let sql = `SELECT employee.first_name, employee.last_name, employee.manager_id AS department 
     FROM employee
     LEFT JOIN role ON employee.role_id = role_id
     LEFT JOIN department ON employee_role.manager_id = manager.id`;
@@ -131,10 +151,10 @@ function viewEmployeeManager() {
         console.table(res);
         mainMenu();
     })
-}
+};
 
-function viewDepartmentEmployees() {
-    const sql = `SELECT employee.first_name, employee.last_name, department.dep_name AS department
+const viewDepartmentEmployees = () => {
+    let sql = `SELECT employee.first_name, employee.last_name, department.dep_name AS department
     FROM employee
     LEFT JOIN role ON employee_role ON employee.role_id = employee_role.id
     LEFT JOIN department ON employee_role.dep_id = department.id`;
@@ -143,10 +163,10 @@ function viewDepartmentEmployees() {
         console.table(res);
         mainMenu();
     })
-}
+};
 
-function viewDepartmentBudget() {
-    const sql = `SELECT dep_id AS id, 
+const viewDepartmentBudget = () => {
+    let sql = `SELECT dep_id AS id, 
     department.dep_name AS department,
     SUM(salary) AS budger
     FROM role 
@@ -156,11 +176,11 @@ function viewDepartmentBudget() {
         console.table(res);
         mainMenu();
     })
-}
+};
 
 //----------------------------- Add -----------------------------------
 //Add a department 
-function addDepartment() {
+const addDepartment = () => {
     inquirer.prompt([
         {
             type: 'input',
@@ -168,7 +188,7 @@ function addDepartment() {
             name: 'depName'
         }
     ]).then(function (res) {
-        const sql = `INSERT INTO department (dep_name) VALUES(?)`;
+        let sql = `INSERT INTO department (dep_name) VALUES(?)`;
         db.query(sql, res.newDepartment, (err, res) => {
             if (err) throw err;
             console.table(res);
@@ -176,38 +196,51 @@ function addDepartment() {
             viewDepartments();
         })
     })
-}
+};
 
 //Adding a role 
-function addRole() {
+const addRole = () => {
+    let sql = 'SELECT * FROM department';
+    db.query(sql, (err, res) => {
+        if (err) throw error;
+        const departmentAdd = [];
+        response.forEach((department) => { departmentAdd.push(department.dep_name); });
+        departmentAdd.push('New department')
+    })
     inquirer.prompt([
-        {
-            type: 'input',
-            message: 'What is the name of the role',
-            name: 'role'
-        },
-        {
-            type: 'input',
-            message: 'What is the salary of the role?',
-            name: 'money'
-        },
         {
             type: 'input',
             message: 'What department does the role belong to?',
             name: 'depRole'
         }
-    ]).then(function (res) {
-        db.query("INSERT INTO employee_role (title) VALUES (title, salary, dep_id)", res.employee_role, function (err, res) {
-            if (err) throw err;
-            console.table(res);
-            console.log("Department sucessfully added");
-            mainMenu();
-        })
+
+    ]).then((answer) => {
+        if (answer === 'New department') {
+            this.addDepartment();
+        } else {
+            addRoleInfo();
+        }
     })
-}
+};
+
+const addRoleInfo = () => {
+    inquirer
+        .prompt([
+            {
+                type: 'input',
+                message: 'What is the name of the role',
+                name: 'role'
+            },
+            {
+                type: 'input',
+                message: 'What is the salary of the role?',
+                name: 'money'
+            }
+        ])
+};
 
 //Add employee
-function addEmployee() {
+const addEmployee = () => {
     inquirer.prompt([
         {
             type: 'input',
@@ -232,32 +265,32 @@ function addEmployee() {
             mainMenu();
         })
     })
-}
+};
 
 //----------------------- Bonus: Update --------------------------------
 
-function updateEmployee() {
+const updateEmployee = () => {
 
     mainMenu();
-}
+};
 
 //----------------------- Bonus: Delete ----------------------------------
-function deleteDepartment() {
+const deleteDepartment = () => {
 
     mainMenu();
-}
+};
 
-function deleteRole() {
-
-    mainMenu();
-}
-
-function deleteEmployee() {
+const deleteRole = () => {
 
     mainMenu();
-}
+};
+
+const deleteEmployee = () => {
+
+    mainMenu();
+};
 
 //------------------------------- End ----------------------------
-function quit() {
+const quit = () => {
 
 };
