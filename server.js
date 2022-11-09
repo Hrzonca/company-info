@@ -29,6 +29,7 @@ function mainMenu() {
                     'Delete department',
                     'Delete role',
                     'Delete employee',
+                    'View department budget',
                     'quit'
                 ],
                 name: 'whatDoYouWant'
@@ -60,10 +61,10 @@ function mainMenu() {
                 updateManager();
 
             } else if (choices === 'View employees by manager') {
-                employeeManager();
+                viewEmployeeManager();
 
             } else if (choices === 'View employees by department') {
-                departmentEmployees();
+                viewDepartmentEmployees();
 
             } else if (choices === 'Delete Department') {
                 deleteDepartment();
@@ -74,12 +75,16 @@ function mainMenu() {
             } else if (choices === 'Delete employee') {
                 deleteEmployee();
 
+            } else if (choices === 'View department budget') {
+                viewDepartmentBudget();
+
             } else if (choices === 'quit') {
                 quit();
             }
         })
 };
 
+//--------------------------- View ---------------------------------
 //View all departments
 function viewDepartments() {
     const sql = `SELECT department.id AS id, department.dep_name AS department FROM department`;
@@ -95,7 +100,7 @@ function viewEmployees() {
     const sql = `SELECT employee.id, employee.first_name, employee.last_name, employee_role.title, department.dep_name AS 'department', 
     role.salary FROM employee, employee_role, department 
     WHERE department.id = role.department.id
-    AND role.id = employee.employee_role.role_id`
+    AND role.id = employee.employee_role.role_id`;
     db.promise().query(sql, (err, res) => {
         if (err) throw err;
         console.table(res);
@@ -107,7 +112,7 @@ function viewEmployees() {
 function viewRoles() {
     const sql = `SELECT employee_role.id, employee_role.title, department.dep_name AS department 
     FROM employee_role
-    INNER JOIN department ON employee_role.department_id = department.id`
+    INNER JOIN department ON employee_role.department_id = department.id`;
     db.promise().query(sql, (err, res) => {
         if (err) throw err;
         console.table(res);
@@ -115,7 +120,46 @@ function viewRoles() {
     })
 }
 
-//Add department to database
+//--------------Bonus: View by manager and view by department-----------
+function viewEmployeeManager() {
+    const sql = `SELECT employee.first_name, employee.last_name, employee.manager_id AS department 
+    FROM employee
+    LEFT JOIN role ON employee.role_id = role_id
+    LEFT JOIN department ON employee_role.manager_id = manager.id`;
+    db.promise().query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        mainMenu();
+    })
+}
+
+function viewDepartmentEmployees() {
+    const sql = `SELECT employee.first_name, employee.last_name, department.dep_name AS department
+    FROM employee
+    LEFT JOIN role ON employee_role ON employee.role_id = employee_role.id
+    LEFT JOIN department ON employee_role.dep_id = department.id`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        mainMenu();
+    })
+}
+
+function viewDepartmentBudget() {
+    const sql = `SELECT dep_id AS id, 
+    department.dep_name AS department,
+    SUM(salary) AS budger
+    FROM role 
+    INNER JOIN department ON employee_role.dep_id GROUP BY employee_role.dep_id`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        mainMenu();
+    })
+}
+
+//----------------------------- Add -----------------------------------
+//Add a department 
 function addDepartment() {
     inquirer.prompt([
         {
@@ -124,11 +168,12 @@ function addDepartment() {
             name: 'depName'
         }
     ]).then(function (res) {
-        db.query("INSERT INTO department (dep_name) VALUES (?)", res.department, function (err, res) {
+        const sql = `INSERT INTO department (dep_name) VALUES(?)`;
+        db.query(sql, res.newDepartment, (err, res) => {
             if (err) throw err;
             console.table(res);
             console.log("Department sucessfully added");
-            mainMenu();
+            viewDepartments();
         })
     })
 }
@@ -189,40 +234,30 @@ function addEmployee() {
     })
 }
 
+//----------------------- Bonus: Update --------------------------------
+
 function updateEmployee() {
 
+    mainMenu();
 }
 
-function employeeManager() {
-
-}
-
-function departmentEmployees() {
-
-}
-
+//----------------------- Bonus: Delete ----------------------------------
 function deleteDepartment() {
 
+    mainMenu();
 }
 
 function deleteRole() {
 
+    mainMenu();
 }
 
 function deleteEmployee() {
 
+    mainMenu();
 }
 
+//------------------------------- End ----------------------------
 function quit() {
 
-}
-
-
-//     {
-//       type: 'input',
-//       message: "Which employye's role do you want to update?",
-//       name: 'updateRole'
-//     }
-//   ]);
-
-  //how ever they answer, they are promted with they are taken to the next question 
+};
