@@ -25,6 +25,7 @@ const mainMenu = () => {
                     'Add department',
                     'Add role',
                     'Add employee',
+                    'View budget',
                     'Update an employee role'
                 ],
                 name: 'whatDoYouWant'
@@ -59,6 +60,9 @@ const mainMenu = () => {
             if (choices === 'Update an employee role') {
                 updateEmployee();
 
+            }
+            if (choices === 'View budget') {
+                viewDepartmentBudget();
             }
         })
 };
@@ -136,42 +140,54 @@ const viewRoles = () => {
 //     })
 // };
 
-// const viewDepartmentBudget = () => {
-//     let sql = `SELECT dep_id AS id, 
-//     department.dep_name AS department,
-//     SUM(salary) AS budget
-//     FROM employee_role 
-//     INNER JOIN department ON employee_role.dep_id GROUP BY employee_role.dep_id;`;
-//     db.query(sql, (err, res) => {
-//         if (err) throw err;
-//         console.table(res);
-//         mainMenu();
-//     })
-// };
-
-
-var roleArray = [];
-function chooseRole() {
-    db.query("SELECT * FROM employee_role", function (err, res) {
-        if (err) throw err
-        for (var i = 0; i < res.length; i++) {
-            //console.log(res);
-            roleArray.push(res[i].title);
-        }
+const viewDepartmentBudget = () => {
+    let sql = `SELECT dep_id FROM employee_role AS id, 
+    department.dep_name AS department,
+    SUM(salary) AS budget,
+    FROM employee_role;`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        mainMenu();
     })
-    return roleArray;
+};
+
+
+
+async function chooseRole() {
+    var roleArray = [];
+    try {
+        const res = await db.promise().query("SELECT * FROM employee_role")
+        console.log(res);
+        for (var i = 0; i < res[0].length; i++) {
+            
+            roleArray.push(res[0][i].title);
+        }
+        return roleArray;
+    } catch (err) {
+        console.log(err)
+        throw err
+    }
 }
 
-var managerArray = [];
-function chooseManager() {
-    db.query("SELECT first_name, last_name FROM employee WHERE manager_id IS NULL", function (err, res) {
-        if (err) throw err
-        for (var i = 0; i < res.length; i++) {
-            managerArray.push(res[i].title);
+
+
+async function chooseManager() {
+    var managerArray = [];
+    try {
+    const res = await db.promise().query("SELECT first_name, last_name FROM employee WHERE manager_id IS NULL")
+    console.log(res)
+        for (var i = 0; i < res[0].length; i++) {
+            managerArray.push(res[0][i].title);
         }
-    })
-    return managerArray;
+       return managerArray; 
+    } catch (err) {
+        console.log(err)
+        throw err
+    }
+    
 }
+
 //----------------------------- Add -----------------------------------
 //Add a department 
 const addDepartment = () => {
@@ -192,7 +208,8 @@ const addDepartment = () => {
     })
 };
 //Add employee
-const addEmployee = () => {
+const addEmployee = async () => {
+    const roles = await chooseRole()
     inquirer.prompt([
         {
             type: 'input',
@@ -201,38 +218,33 @@ const addEmployee = () => {
         },
         {
             type: 'input',
-            message: "What is the employee's last name",
+            message: "What is the employee's last name?",
             name: 'lastName'
         },
         {
             type: 'list',
             message: "What is the employee's role?",
             name: 'role',
-            choices: chooseRole()
-        },
-        {
-            type: 'list',
-            message: "Who is the employee's manager?",
-            name: 'manager',
-            choices: chooseManager()
+            choices: roles
         }
     ]).then(function (val) {
-        let roleId = chooseRole().indexOf(val.role) + 1
-        let managerId = chooseManager().indexOf(val.manager) + 1
+        let roleId = val.roles
         db.query("INSERT INTO employee SET ?",
             {
                 first_name: val.firstName,
                 last_name: val.lastName,
                 role_id: roleId,
-                manager_id: managerId
+               
 
             }, function (err) {
                 if (err) throw err
                 console.table(val)
-                mainMenu();
+                addManager();
             })
+    
     })
-};
+    };
+   
 
 // const addRole = () => {
 //     let sql = 'SELECT * FROM department';
@@ -312,7 +324,7 @@ const addRoleInfo = (newDepData) => {
         .prompt([
             {
                 type: 'input',
-                message: 'What is the name of the role',
+                message: 'What is the name of the role?',
                 name: 'createdRole'
             },
             {
@@ -365,20 +377,20 @@ const updateEmployee = () => {
                 message: "What is the employee's new title?",
                 choices: chooseRole()
             }
-        ]).then(function(val) {
-            let roleId = chooseRole().indexOf(val.role) +1
+        ]).then(function (val) {
+            let roleId = chooseRole().indexOf(val.role) + 1
             db.query("UPDATE employee SET WHERE ?",
-            {
-                last_name: lastValueFrom.lastName
-            },
-            {
-                roleId: roleId
-            },
-            function(err){
-                if (err) throw err
-                console.table(val)
-                mainMenu()
-            }
+                {
+                    last_name: lastValueFrom.lastName
+                },
+                {
+                    roleId: roleId
+                },
+                function (err) {
+                    if (err) throw err
+                    console.table(val)
+                    mainMenu()
+                }
             )
         })
     })

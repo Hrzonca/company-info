@@ -5,4 +5,9 @@ INSERT INTO employee_role(title, salary, dep_id)
 VALUES("Budtender", 30000, 3), ("Engineer", 120000, 1), ("Manager", 70000, 3);
 
 INSERT INTO employee(first_name, last_name, role_id, manager_id)
-VALUES ('Haleigh', 'Rzonca', 1, 2), ('Jake', 'Chief', 4, NULL), ('anna', 'cats', 2, 3), ('juile', 'house', 1, 4);
+VALUES 
+('Haleigh', 'Rzonca', 1, NULL), 
+('anna', 'cats', 2, 3), 
+('juile', 'house', 1, 4), 
+('jake', 'z', 2, NULL),
+('james', 'f', 2, 3);
